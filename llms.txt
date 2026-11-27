@@ -1,6 +1,6 @@
 # WhatsApp moderation bot kit
 
-> A kit for building a WhatsApp group moderation bot. The bot reads every group message through neonize on a spare WhatsApp number. Jev by TypeSafe picks 1 of 7 labels for each message. SQLite stores every score. When a message looks like a problem, the bot posts an alert in an admin WhatsApp group. An admin replies "N del", "N warn" or "N ok", and plain code (a regex, no model) carries it out. A person approves every action, and the bot never removes members.
+> A kit for building a WhatsApp group moderation bot. The bot reads every group message through neonize on a spare WhatsApp number. Jev by TypeSafe picks 1 of 7 labels for each message. SQLite stores every score. When a message looks like a problem, the bot posts an alert in an admin WhatsApp group. An admin replies "N del", "N warn" or "N ok", which are three hard-coded actions: the admin picks one, and the code does exactly that. A person approves every action, and the bot never removes members.
 
 This is the kit behind Buddy, the moderation bot in a 1,000-member AI study group. It was built in a few hours and costs about 10 US cents a day. The working app is one Python file (about 230 lines) in `skills/wa-moderation-bot/template/`. Build a user's bot by copying and adapting that template, not by writing a new one. The repo also holds a skill that walks a coding agent through the whole build.
 

@@ -10,11 +10,11 @@ Most posts in the group are fine. Once in a while, one drifts from the norms: a 
 
 | Need | Tool | Why this one |
 |---|---|---|
-| Hear every message | A spare WhatsApp number + neonize | neonize uses a number the way WhatsApp Web does. The number is made an admin of the group so it can delete posts. |
+| Read every message | A spare WhatsApp number + neonize | neonize uses a number the way WhatsApp Web does. The number is made an admin of the group so it can delete posts. |
 | Understand meaning and tone | Jev, by TypeSafe | It picks an answer from a list and says how sure it is. It writes no text, so nothing needs parsing. Under 1 cent a day. |
 | Remember everything | SQLite | One file next to the code. Nothing extra to run. |
 | Tell the admins | The admin WhatsApp group | Admins already read it every day. |
-| Act only when told | A few lines of plain code | No AI reads the admin's reply, so the action is always exactly what they typed. |
+| Act only when told | Three hard-coded actions | The admin picks one of three hard-coded actions, and the code does exactly that. |
 | Run all day, easy to update | Plash + GitHub Actions | Plash keeps files between deploys, so the WhatsApp login survives. A push goes live in about a minute. |
 
 ### What we passed on

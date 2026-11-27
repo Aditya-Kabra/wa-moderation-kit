@@ -13,7 +13,7 @@ A working template (about 230 lines of Python) lives in `template/` next to this
 2. Sends the group norms, the last 3 messages and the new message to Jev, which picks one of 7 labels with a probability for each.
 3. Saves every message with all label scores and a hash of the norms version (SQLite in `data/`).
 4. If the label is not `ok` and its score clears the bar (0.6, or 0.85 for `hype_forward`), posts an alert to the admin group with a case number and a suggested action.
-5. A member of the admin group replies `12 del`, `12 warn` or `12 ok`. A regex, with no model, carries it out and confirms.
+5. A member of the admin group replies `12 del`, `12 warn` or `12 ok`. These are three hard-coded actions: the admin picks one, and the code does exactly that, then confirms.
 
 ## Hard rules
 
