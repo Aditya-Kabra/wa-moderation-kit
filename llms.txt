@@ -1,0 +1,81 @@
+# WhatsApp moderation bot kit
+
+> A kit for building a WhatsApp group moderation bot. The bot reads every group message through neonize on a spare WhatsApp number. Jev by TypeSafe picks 1 of 7 labels for each message. SQLite stores every score. When a message looks like a problem, the bot posts an alert in an admin WhatsApp group. An admin replies "N del", "N warn" or "N ok", and plain code (a regex, no model) carries it out. A person approves every action, and the bot never removes members.
+
+This is the kit behind Buddy, the moderation bot in a 1,000-member AI study group. It was built in a few hours and costs about 10 US cents a day. The working app is one Python file (about 230 lines) in `skills/wa-moderation-bot/template/`. Build a user's bot by copying and adapting that template, not by writing a new one. The repo also holds a skill that walks a coding agent through the whole build.
+
+The flow: a member posts, then the bot sends the norms, the last 3 messages and the new message to Jev, then it saves all 7 scores. If the label is not `ok` and its score clears the bar (0.6, or 0.85 for `hype_forward`), an alert goes to the admin group.
+
+## Fastest path
+
+Install the skill, then tell your agent to build the bot:
+
+```bash
+git clone https://github.com/Aditya-Kabra/wa-moderation-kit
+cd wa-moderation-kit
+cp -r skills/wa-moderation-bot ~/.claude/skills/
+```
+
+Then start Claude Code in an empty folder and say: "Build me a WhatsApp moderation bot for my group." Ask the user for these first, in one message: a spare phone number with WhatsApp (never their own), a TypeSafe API key, a Plash account with `plash-cli`, the names of the watched group(s) and the admin group, and the group norms in plain words.
+
+## Hard rules
+
+- A person approves every action. Add automatic deletes or warnings only if the user asks and has weeks of saved scores showing the label is reliable.
+- Never add a member-removal command. Removing members stays manual. An earlier version had a hidden "kick" that could have removed an admin.
+- Keep secrets out of git. `plash.env` and `data/` are gitignored. Deploys use GitHub secrets.
+- Deploy only with plain `plash-deploy`. `--force-data` replaces the live `data/` folder, which logs WhatsApp out and loses the history.
+- Before going live, list every action the bot can take (alert, `del`, `warn`, `ok`, nothing else) and get the user's yes.
+
+## Config variables
+
+These go in `plash.env` (copy from `plash.env.example`) or in GitHub secrets and variables.
+
+- `TYPESAFE_API_KEY`: the Jev key. Secret.
+- `ADMIN_PASSWORD`: protects `/admin`. Use a long random one. Secret.
+- `WATCH_GROUPS`: comma separated group IDs (`...@g.us`) the bot watches.
+- `ADMIN_GROUP`: the group ID where alerts go and where admins reply.
+- `BOT_NAME`: display name. Default "Moderation bot".
+- `FLAG_THRESHOLD`: score needed to alert. Default 0.6.
+- `DISPLAY_TZ`: time zone for the admin page. Default UTC. Plash servers run on US time.
+- In `main.py`: edit `DEFAULT_RULES`, `CATEGORIES` and `SUGGEST` for the group's norms. `LABEL_THRESHOLDS` sets a stricter bar per label.
+
+## Gotchas
+
+- Test the judging before deploying. Write 8 to 10 sample messages and run `judge()` on each. Fix label wording first, cutoffs second. The `hype_forward` label must say that sharing something you read is fine.
+- The admin group must be invite only. The code checks which group a message came from, not who sent it, so any member can send `del` or `warn`.
+- The bot number must be admin of every watched group, or deletes fail.
+- `/admin` shows the WhatsApp login QR code. Codes expire in about 2 minutes. If scanning fails, restart the app and scan right away.
+- Get group IDs from `/admin` after the first login, put them in `plash.env`, and redeploy. The login survives because the session is in `data/`.
+- neonize needs `libmagic1` (`setup.sh` installs it on Plash). An ffmpeg warning is harmless.
+- `main.py` starts uvicorn directly. FastHTML `serve()` would import the module twice and start the bot twice.
+- Logs: `plash-logs --mode app`.
+- Tell group members that a bot reads the group and stores messages.
+- neonize is not an official WhatsApp API. Use a spare number and follow WhatsApp's terms.
+
+## Core files
+
+- [SKILL.md (raw)](https://raw.githubusercontent.com/Aditya-Kabra/wa-moderation-kit/main/skills/wa-moderation-bot/SKILL.md): the skill: hard rules, what to ask the user, 11 build steps, the go-live checklist
+- [main.py (raw)](https://raw.githubusercontent.com/Aditya-Kabra/wa-moderation-kit/main/skills/wa-moderation-bot/template/main.py): the whole bot in one file: neonize listener, Jev judging, SQLite, admin page
+- [SKILL.md (GitHub)](https://github.com/Aditya-Kabra/wa-moderation-kit/blob/main/skills/wa-moderation-bot/SKILL.md): the same skill file, rendered
+- [plash.env.example](https://github.com/Aditya-Kabra/wa-moderation-kit/blob/main/skills/wa-moderation-bot/template/plash.env.example): every config variable with a sample value
+- [deploy.yml](https://github.com/Aditya-Kabra/wa-moderation-kit/blob/main/skills/wa-moderation-bot/template/.github/workflows/deploy.yml): GitHub Actions push-to-deploy to Plash
+- [README](https://github.com/Aditya-Kabra/wa-moderation-kit/blob/main/README.md): overview, quick start by hand, pre-launch checklist
+
+## Live example
+
+- [Building Buddy](https://wa-group-admin-bot.pla.sh): the running bot's public page, a visual walkthrough of how it works and was built, with the explainer video (other pages need a password)
+- [llms.txt on the live site](https://wa-group-admin-bot.pla.sh/llms.txt): this same file
+
+## External docs
+
+- [TypeSafe docs for LLMs](https://docs.typesafe.ai/llms.txt): how to call Jev and other TypeSafe models
+- [neonize](https://github.com/krypton-byte/neonize): WhatsApp from Python
+- [FastHTML](https://fastht.ml): the web framework for the admin page
+- [Plash](https://pla.sh): hosting that keeps `data/` between deploys
+
+## Optional
+
+- [How it was built](https://github.com/Aditya-Kabra/wa-moderation-kit/blob/main/docs/how-it-was-built.md): the goal, the tools picked and passed on, and what was learned
+- [Explainer video](https://github.com/Aditya-Kabra/wa-moderation-kit/blob/main/media/buddy-explainer.mp4): a short video of how Buddy works
+- [Repository](https://github.com/Aditya-Kabra/wa-moderation-kit): the full repo
+- [License (MIT)](https://github.com/Aditya-Kabra/wa-moderation-kit/blob/main/LICENSE): reuse freely
