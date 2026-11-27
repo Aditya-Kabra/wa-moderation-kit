@@ -1,0 +1,5 @@
+python-fasthtml
+uvicorn
+neonize==0.12.4
+typesafe-sdk
+segno

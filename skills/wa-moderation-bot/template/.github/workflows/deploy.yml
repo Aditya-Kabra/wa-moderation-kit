@@ -1,0 +1,50 @@
+name: Deploy to Plash
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Stop if any secret is missing
+        env:
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          WATCH_GROUPS: ${{ secrets.WATCH_GROUPS }}
+          ADMIN_GROUP: ${{ secrets.ADMIN_GROUP }}
+          PLASH_TOKEN: ${{ secrets.PLASH_TOKEN }}
+        run: |
+          missing=0
+          for k in TYPESAFE_API_KEY ADMIN_PASSWORD WATCH_GROUPS ADMIN_GROUP PLASH_TOKEN; do
+            if [ -z "${!k}" ]; then echo "::error::Secret $k is empty"; missing=1; fi
+          done
+          exit $missing
+      - name: Write plash.env from secrets
+        env:
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          WATCH_GROUPS: ${{ secrets.WATCH_GROUPS }}
+          ADMIN_GROUP: ${{ secrets.ADMIN_GROUP }}
+          # optional, not secret: set as repository variables (gh variable set NAME)
+          BOT_NAME: ${{ vars.BOT_NAME }}
+          DISPLAY_TZ: ${{ vars.DISPLAY_TZ }}
+          FLAG_THRESHOLD: ${{ vars.FLAG_THRESHOLD }}
+        run: |
+          umask 077
+          for k in TYPESAFE_API_KEY ADMIN_PASSWORD WATCH_GROUPS ADMIN_GROUP; do
+            printf 'export %s=%q\n' "$k" "${!k}"
+          done > plash.env
+          for k in BOT_NAME DISPLAY_TZ FLAG_THRESHOLD; do
+            if [ -n "${!k}" ]; then printf 'export %s=%q\n' "$k" "${!k}" >> plash.env; fi
+          done
+      - name: Deploy (keeps live data/, so no new QR scan)
+        env:
+          PLASH_TOKEN: ${{ secrets.PLASH_TOKEN }}
+        run: |
+          pip install -q plash-cli==0.3.15
+          python -c "from plash_cli.cli import deploy; deploy('.')"

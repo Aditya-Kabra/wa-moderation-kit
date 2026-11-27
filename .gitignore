@@ -1,0 +1,6 @@
+plash.env
+data/
+__pycache__/
+.DS_Store
+**/plash.env
+**/data/
